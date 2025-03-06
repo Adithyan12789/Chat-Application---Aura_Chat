@@ -39,15 +39,17 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
+    const { selectedUser } = get();
     if (!selectedUser?._id) return;
 
     set({ isSendingMessage: true });
     try {
       const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
       
-      // Update messages state with the new message
-      set({ messages: [...messages, res.data] });
+      // Update messages state with the new message while preserving existing messages
+      set((state) => ({
+        messages: [...state.messages, res.data]
+      }));
       
       // Emit the message through socket
       const socket = useAuthStore.getState().socket;
@@ -66,7 +68,7 @@ export const useChatStore = create((set, get) => ({
   },
 
   subscribeToMessages: () => {
-    const { selectedUser, messages } = get();
+    const { selectedUser } = get();
     if (!selectedUser) return;
 
     const socket = useAuthStore.getState().socket;
@@ -84,11 +86,13 @@ export const useChatStore = create((set, get) => ({
         newMessage.receiverId === selectedUser._id;
 
       // Check if message already exists to prevent duplicates
-      const messageExists = messages.some(msg => msg._id === newMessage._id);
-      
-      if (isMessageFromSelectedUser && !messageExists) {
-        set({ messages: [...messages, newMessage] });
-      }
+      set((state) => {
+        const messageExists = state.messages.some(msg => msg._id === newMessage._id);
+        if (isMessageFromSelectedUser && !messageExists) {
+          return { messages: [...state.messages, newMessage] };
+        }
+        return state;
+      });
     });
   },
 

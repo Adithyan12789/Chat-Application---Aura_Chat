@@ -13,6 +13,8 @@
     "@tailwindcss/vite": "^4.0.9",
     "axios": "^1.8.1",
     "chat-application---aura_chat": "file:..",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.4.10",
     "lucide-react": "^0.477.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
