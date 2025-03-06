@@ -18,15 +18,27 @@ const ChatContainer = () => {
   } = useChatStore();
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    getMessages(selectedUser._id);
+    if (!selectedUser?._id) return;
 
+    // Fetch messages only on first render or when user changes
+    if (isFirstRender.current) {
+      getMessages(selectedUser._id);
+      isFirstRender.current = false;
+    }
+
+    // Subscribe to new messages
     subscribeToMessages();
 
-    return () => unsubscribeFromMessages();
-  }, [selectedUser._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
+    // Cleanup function
+    return () => {
+      unsubscribeFromMessages();
+    };
+  }, [selectedUser?._id, getMessages, subscribeToMessages, unsubscribeFromMessages]);
 
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (messageEndRef.current && messages) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -54,7 +66,7 @@ const ChatContainer = () => {
             className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
             ref={messageEndRef}
           >
-            <div className=" chat-image avatar">
+            <div className="chat-image avatar">
               <div className="size-10 rounded-full border">
                 <img
                   src={
@@ -89,4 +101,5 @@ const ChatContainer = () => {
     </div>
   );
 };
+
 export default ChatContainer;
